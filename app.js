@@ -6,81 +6,88 @@ const formEl = document.getElementById('answer-form');
 const answerEl = document.getElementById('answer');
 
 const QUESTION_TIME = 10;
+const OPERATIONS = [
+  { symbol: '+', solve: (a, b) => a + b },
+  { symbol: '−', solve: (a, b) => a - b },
+  { symbol: '×', solve: (a, b) => a * b }
+];
+
 let score = 0;
 let timeLeft = QUESTION_TIME;
-let timerId;
 let currentAnswer = 0;
+let timerId = null;
 
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function createQuestion() {
-  const operations = ['+', '-', '*'];
-  const op = operations[randomInt(0, operations.length - 1)];
+function nextQuestion() {
+  const operation = OPERATIONS[randomInt(0, OPERATIONS.length - 1)];
+  let left = randomInt(1, 12);
+  let right = randomInt(1, 12);
 
-  let a = randomInt(1, 12);
-  let b = randomInt(1, 12);
-
-  if (op === '-') {
-    if (b > a) {
-      [a, b] = [b, a];
-    }
-    currentAnswer = a - b;
-  } else if (op === '*') {
-    currentAnswer = a * b;
-  } else {
-    currentAnswer = a + b;
+  if (operation.symbol === '−' && right > left) {
+    [left, right] = [right, left];
   }
 
-  questionEl.textContent = `${a} ${op} ${b} = ?`;
+  currentAnswer = operation.solve(left, right);
+  questionEl.textContent = `${left} ${operation.symbol} ${right} = ?`;
+
   timeLeft = QUESTION_TIME;
   timeEl.textContent = String(timeLeft);
   answerEl.value = '';
   answerEl.focus();
 }
 
-function tick() {
+function handleTick() {
   timeLeft -= 1;
   timeEl.textContent = String(timeLeft);
 
   if (timeLeft <= 0) {
     messageEl.textContent = `Time's up! Correct answer: ${currentAnswer}`;
-    createQuestion();
+    nextQuestion();
   }
 }
 
-formEl.addEventListener('submit', (event) => {
+function handleSubmit(event) {
   event.preventDefault();
-  const value = Number(answerEl.value.trim());
+  const rawAnswer = answerEl.value.trim();
 
-  if (value === currentAnswer) {
-    score += 1;
-    scoreEl.textContent = String(score);
-    messageEl.textContent = 'Correct! +1 point';
-    createQuestion();
+  if (rawAnswer === '' || Number.isNaN(Number(rawAnswer))) {
+    messageEl.textContent = 'Please enter a valid number.';
+    answerEl.focus();
     return;
   }
 
-  messageEl.textContent = `Not quite. Correct answer: ${currentAnswer}`;
-  createQuestion();
-});
+  const numericAnswer = Number(rawAnswer);
+
+  if (numericAnswer === currentAnswer) {
+    score += 1;
+    scoreEl.textContent = String(score);
+    messageEl.textContent = 'Correct! +1 point';
+  } else {
+    messageEl.textContent = `Not quite. Correct answer: ${currentAnswer}`;
+  }
+
+  nextQuestion();
+}
 
 function startGame() {
-  createQuestion();
-  timerId = window.setInterval(tick, 1000);
+  formEl.addEventListener('submit', handleSubmit);
+  nextQuestion();
+  timerId = window.setInterval(handleTick, 1000);
 }
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch((err) => {
-      console.error('Service worker registration failed:', err);
+    navigator.serviceWorker.register('./sw.js').catch((error) => {
+      console.error('Service worker registration failed:', error);
     });
   });
 }
 
 window.addEventListener('beforeunload', () => {
-  if (timerId) {
+  if (timerId !== null) {
     window.clearInterval(timerId);
   }
 });
