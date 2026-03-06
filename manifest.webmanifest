@@ -1,0 +1,9 @@
+{
+  "name": "Quick Math Offline Game",
+  "short_name": "Quick Math",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#101626",
+  "theme_color": "#121212",
+  "icons": []
+}
