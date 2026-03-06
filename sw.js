@@ -1,6 +1,6 @@
-const CACHE_NAME = 'quick-math-offline-v1';
-const OFFLINE_URL = './index.html';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'quick-math-offline-v2';
+const OFFLINE_FALLBACK = './index.html';
+const FILES_TO_CACHE = [
   './',
   './index.html',
   './styles.css',
@@ -10,7 +10,7 @@ const ASSETS_TO_CACHE = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(FILES_TO_CACHE))
   );
   self.skipWaiting();
 });
@@ -19,9 +19,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
       )
     )
   );
@@ -34,17 +32,22 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        const responseClone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseClone);
-        });
-        return response;
-      })
-      .catch(async () => {
-        const cached = await caches.match(event.request);
-        return cached || caches.match(OFFLINE_URL);
-      })
+    (async () => {
+      try {
+        const networkResponse = await fetch(event.request);
+
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(event.request, networkResponse.clone());
+
+        return networkResponse;
+      } catch (error) {
+        const cachedResponse = await caches.match(event.request);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        return caches.match(OFFLINE_FALLBACK);
+      }
+    })()
   );
 });
