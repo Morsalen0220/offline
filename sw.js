@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quick-math-offline-v3';
+const CACHE_NAME = 'quick-math-offline-v4';
 const OFFLINE_FALLBACK = './index.html';
 const FILES_TO_CACHE = [
   './',

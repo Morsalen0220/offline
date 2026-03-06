@@ -4,6 +4,8 @@ const questionEl = document.getElementById('question');
 const messageEl = document.getElementById('message');
 const formEl = document.getElementById('answer-form');
 const answerEl = document.getElementById('answer');
+const runnerEl = document.getElementById('runner');
+const questionBoxEl = document.getElementById('question-box');
 
 const QUESTION_TIME = 10;
 const OPERATIONS = [
@@ -21,6 +23,18 @@ function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function animateJump() {
+  runnerEl.classList.remove('jump');
+  void runnerEl.offsetWidth;
+  runnerEl.classList.add('jump');
+}
+
+function animateMistake() {
+  questionBoxEl.classList.remove('shake');
+  void questionBoxEl.offsetWidth;
+  questionBoxEl.classList.add('shake');
+}
+
 function nextQuestion() {
   const operation = OPERATIONS[randomInt(0, OPERATIONS.length - 1)];
   let left = randomInt(1, 12);
@@ -35,6 +49,7 @@ function nextQuestion() {
 
   timeLeft = QUESTION_TIME;
   timeEl.textContent = String(timeLeft);
+  timeEl.classList.remove('low-time');
   answerEl.value = '';
   answerEl.focus();
 }
@@ -43,8 +58,13 @@ function handleTick() {
   timeLeft -= 1;
   timeEl.textContent = String(timeLeft);
 
+  if (timeLeft <= 3) {
+    timeEl.classList.add('low-time');
+  }
+
   if (timeLeft <= 0) {
     messageEl.textContent = `Time's up! Correct answer: ${currentAnswer}`;
+    animateMistake();
     nextQuestion();
   }
 }
@@ -65,8 +85,10 @@ function handleSubmit(event) {
     score += 1;
     scoreEl.textContent = String(score);
     messageEl.textContent = 'Correct! +1 point';
+    animateJump();
   } else {
     messageEl.textContent = `Not quite. Correct answer: ${currentAnswer}`;
+    animateMistake();
   }
 
   nextQuestion();

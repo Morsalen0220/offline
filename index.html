@@ -13,12 +13,20 @@
       <h1>Quick Math Offline Game</h1>
       <p class="subtitle">Answer before time runs out!</p>
 
+      <section class="runner-scene" aria-hidden="true">
+        <div class="sky-line"></div>
+        <div id="runner" class="runner">🦖</div>
+        <div class="obstacle obstacle-1">🌵</div>
+        <div class="obstacle obstacle-2">🌵</div>
+        <div class="ground-track"></div>
+      </section>
+
       <section class="status-row" aria-live="polite">
         <div><span class="label">Score</span><span id="score">0</span></div>
         <div><span class="label">Time</span><span id="time">10</span>s</div>
       </section>
 
-      <section class="question-box">
+      <section class="question-box" id="question-box">
         <p class="label">Question</p>
         <p id="question" class="question-text">Loading...</p>
       </section>
