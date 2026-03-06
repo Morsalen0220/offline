@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quick-math-offline-v2';
+const CACHE_NAME = 'quick-math-offline-v3';
 const OFFLINE_FALLBACK = './index.html';
 const FILES_TO_CACHE = [
   './',
@@ -40,13 +40,20 @@ self.addEventListener('fetch', (event) => {
         cache.put(event.request, networkResponse.clone());
 
         return networkResponse;
-      } catch (error) {
+      } catch (_error) {
         const cachedResponse = await caches.match(event.request);
         if (cachedResponse) {
           return cachedResponse;
         }
 
-        return caches.match(OFFLINE_FALLBACK);
+        if (event.request.mode === 'navigate') {
+          return caches.match(OFFLINE_FALLBACK);
+        }
+
+        return new Response('Offline and resource not cached.', {
+          status: 503,
+          statusText: 'Service Unavailable'
+        });
       }
     })()
   );
